@@ -1,0 +1,28 @@
+from utils import *
+st.set_page_config(page_title='Stock Prediction Application', layout="wide", initial_sidebar_state="auto", menu_items=None)
+
+st.title("Stock Prediction Application")
+
+with st.form("get-data", border=False):
+    c1, c2, c3, c4 = st.columns(4)
+    ticker = c1.text_input( "Enter the ticker" )
+    lookback = c2.number_input("Enter the lookback value", 10, value=60)
+    c1, c2, c3, c4 = st.columns(4)
+    training_start_date = c1.date_input('Enter the training data start date', value=dt.now() - relativedelta(years=1), )
+    training_end_date = c2.date_input('Enter the training data end date', value=dt.now())
+    live_start_date = c3.date_input('Enter the live data start date', value=dt.now() - relativedelta(months=6), )
+    live_end_date = c4.date_input('Enter the live data end date', value=dt.now())
+    submitted = st.form_submit_button("Submit")
+
+if submitted:
+
+    with st.spinner("Getting the Data and training the model..."):
+        model, scaler = get_model_n_scaler(ticker, training_start_date, training_end_date, lookback)
+
+    with st.spinner("Predicting the prices..."):
+        live_data, predicted_prices = get_predicted_values( ticker = ticker, start_date = live_start_date, end_date = live_end_date, lookback = lookback, model = model, scaler = scaler)
+
+    with st.spinner("Building the plot..."):
+        fig = get_plot(live_data, lookback, predicted_prices, ticker)
+
+    st.plotly_chart(fig, use_container_width=True)
